@@ -1081,6 +1081,8 @@ comm_intr(); //init DSK, codec, McBSP
 while(1);
 }
 
+MATLAB COMMAND:
+fir1(30,2*400/8000,hamming(31))
 ________________________________________________________
 
 
