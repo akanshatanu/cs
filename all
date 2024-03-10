@@ -1,6 +1,5 @@
 EXP-1:
 
-
 clc; close all; clear all;
 
 signal_length=1000;
@@ -51,7 +50,165 @@ title('CrossCorrelation of Signal 2');
 xlabel('Time');
 ylabel('Magnitude');
 grid on;
+____________________________________
 
+LOWPASS SAMPLING
+
+N = 1000; % The maximum value of n
+M = 50;
+Rxav = zeros(1, M + 1);
+Ryav = zeros(1, M + 1);
+Sxav = zeros(1, M + 1);
+Syav = zeros(1, M + 1);
+% Perform ensemble averaging over ten realizations
+for i = 1:10
+ X = rand(1, N) - (1/2);
+ Y(1) = 0;
+ 
+ % Generate Y(n) using a first-order autoregressive process
+ for n = 2:N
+ Y(n) = 0.9 * Y(n - 1) + X(n);
+ end
+ 
+ % Compute autocorrelations of X(n) and Y(n)
+ Rx = Rx_est(X, M);
+ Ry = Rx_est(Y, M);
+ 
+ % Compute power spectra of X(n) and Y(n)
+ Sx = fftshift(abs(fft(Rx)));
+ Sy = fftshift(abs(fft(Ry)));
+ 
+ % Accumulate results for ensemble averaging
+ Rxav = Rxav + Rx;
+ Ryav = Ryav + Ry;
+ Sxav = Sxav + Sx;
+ Syav = Syav + Sy;
+end
+% Average over the ten realizations
+Rxav = Rxav / 10;
+Ryav = Ryav / 10;
+Sxav = Sxav / 10;
+Syav = Syav / 10;
+% Display results
+disp('Ensemble Average Autocorrelation of X:');
+disp(Rxav);
+disp('Ensemble Average Autocorrelation of Y:');
+disp(Ryav);
+disp('Ensemble Average Power Spectrum of X:');
+disp(Sxav);
+disp('Ensemble Average Power Spectrum of Y:');
+disp(Syav);
+% Plot Ensemble Average Autocorrelations and Power Spectra
+figure;
+% Plot Ensemble Average Autocorrelations
+subplot(2, 1, 1);
+plot(0:M, Rxav, 'DisplayName', 'X(n)');
+title('Ensemble Average Autocorrelations');
+xlabel('Lag');
+ylabel('Autocorrelation');
+legend;
+subplot(2, 1, 2);
+plot(0:M, Ryav, 'DisplayName', 'Y(n)');
+title('Ensemble Average Autocorrelations');
+xlabel('Lag');
+ylabel('Autocorrelation');
+legend;
+figure;
+% Plot Ensemble Average Power Spectra
+subplot(2, 1, 1);
+frequencies = linspace(-0.5, 0.5, M + 1);
+plot(frequencies, Sxav, 'DisplayName', 'X(n)');
+title('Ensemble Average Power Spectra');
+xlabel('Normalized Frequency');
+ylabel('Power Spectral Density');
+legend;
+subplot(2, 1, 2);
+plot(frequencies, Syav, 'DisplayName', 'Y(n)');
+title('Ensemble Average Power Spectra');
+xlabel('Normalized Frequency');
+ylabel('Power Spectral Density');
+legend;
+% Autocorrelation estimation function
+function [Rx] = Rx_est(X, M)
+ N = length(X);
+ Rx = zeros(1, M + 1);
+ 
+ for m = 1:M + 1
+ for n = 1:N - m + 1
+ Rx(m) = Rx(m) + X(n) * X(n + m - 1);
+ end
+ Rx(m) = Rx(m) / (N - m + 1);
+ end
+end
+___________________________________
+
+BANDPASS SAMPLING
+
+N = 1000; % number of samples
+for i = 1:2:N
+ % Your loop body is currently empty. If you have code to include here, add it.
+end
+m = 0;
+sgma = 1;
+% Initialize arrays to store Gaussian random variables
+Xl = zeros(1, N);
+X2 = zeros(1, N);
+% Generate Gaussian random variables
+for i = 1:2:N
+ [Xl(i), Xl(i + 1)] = gngauss(m, sgma);
+ [X2(i), X2(i + 1)] = gngauss(m, sgma);
+end
+% Initialize filter coefficients
+A = [1, -0.9];
+B = 1;
+% Filter the Gaussian random variables
+Xc = filter(B, A, Xl);
+Xs = filter(B, A, X2);
+% Bandpass modulation
+fc = 1000 / pi;
+band_pass_process = zeros(1, N);
+for i = 1:N
+ band_pass_process(i) = Xc(i) * cos(2 * pi * fc * i) - Xs(i) * sin(2 * pi * fc 
+* i);
+end
+% Determine the autocorrelation and the spectrum of the bandpass process
+M = 50;
+bpp_autoco = Rx_est(band_pass_process, M);
+bpp_spectrum = fftshift(abs(fft(bpp_autoco)));
+% Plotting commands
+figure;
+subplot(2, 1, 1);
+plot(0:M, bpp_autoco);
+title('Autocorrelation of Bandpass Process');
+xlabel('Lag');
+ylabel('Autocorrelation');
+subplot(2, 1, 2);
+frequencies = linspace(-0.5, 0.5, M + 1);
+plot(frequencies, bpp_spectrum);
+title('Power Spectral Density of Bandpass Process');
+xlabel('Normalized Frequency');
+ylabel('Power Spectral Density');
+% Function to generate Gaussian random variables
+function [gsrvl, gsrv2] = gngauss(m, sgma)
+ u = rand;
+ z = sgma * (sqrt(2 * log(1 / (1 - u))));
+ u = rand;
+ gsrvl = m + z * cos(2 * pi * u);
+ gsrv2 = m + z * sin(2 * pi * u);
+end
+% Autocorrelation estimation function
+function [Rx] = Rx_est(X, M)
+ N = length(X);
+ Rx = zeros(1, M + 1);
+ 
+ for m = 1:M + 1
+ for n = 1:N - m + 1
+ Rx(m) = Rx(m) + X(n) * X(n + m - 1);
+ end
+ Rx(m) = Rx(m) / (N - m + 1);
+ end
+end
+______________________________________
 
 
 EXP-2:
@@ -115,7 +272,7 @@ bar(2:no,probd);
 title('Central Limit Theorem: N=10 Dice');
 xlabel('Possible Outcomes');
 ylabel('Probability');
-
+________________________
 
 EXP-3:
 
@@ -164,6 +321,7 @@ plot(tsamp, xsampled , 'b*-');
 xlabel("Time");
 ylabel("Amplitude");
 title("OverSampling(fs>2fm)");
+___________________________________________
 
 
 Frequency Domain
@@ -188,7 +346,7 @@ l=length(x_DFT);
 x_length = -l/2:l/2-1;
 subplot(4,2,1);
 stem(100*x_length+50,x_DFT);
-axis([-800 800 0 600]);6
+axis([-800 800 0 600]);
 xlabel("Frequency");
 ylabel("Magnitude");
 title("Analog signal in Frequency Domain")
@@ -253,6 +411,9 @@ xlabel("Time");
 ylabel("Amplitude");
 title("Over Sampling(fs>2fm)");
 
+___________________________________________
+
+
 EXP-4
 
 Part 1
@@ -309,6 +470,8 @@ title(['Power spectral density of the subsampled signal'...
 ylabel('dBW/Hz');      grid on;
 xlabel(['Frequency in Hz (fs = ',num2str(fs),' Hz)']);   
 La = axis;    axis([0, max(F), La(3:4)]);
+
+____________________________________________
 
 
 Part 2:
@@ -372,6 +535,8 @@ stairs(t1, y1.Data,'k-','LineWidth',1);
 La = axis;   axis([0.44, 0.442, La(3:4)]);
 title('Bandpass signal and reconstructed bandpass signal (excerpt)');
 xlabel('s');   grid on;
+
+____________________________________________
 
 
 Part 3:
@@ -439,6 +604,7 @@ La = axis;   axis([0.026, 0.02605, La(3:4)]);
 title('Bandpass signal and reconstructed bandpass signal (excerpt)');
 xlabel('s');   grid on;
 
+_________________________________________________
 
 
 EXP-5
@@ -484,6 +650,7 @@ function [sqnr, a_quan, code] = u_pcm(a, n)
     sqnr=20*log10(norm(a)/norm(a-a_quan));
 end
 
+__________________________________________________
 
 
 NON UNIFORM QUANTIZATION
@@ -537,6 +704,8 @@ end
     function x=invmulaw(y,mu)
     x=(((1+mu).^(abs(y))-1)./mu).*sign(y);
     end
+____________________________________________
+
 
 EXP-6
 
@@ -569,6 +738,7 @@ stairs(xn);
 hold on;
 
 for i=1:d
+0
     if d(i)>xn(i)
         d(i)=0;
         xn(i+1)=xn(i)-delta;
@@ -583,6 +753,8 @@ title('Step Size of 0.2');
 xlabel('Time');
 ylabel('Amplitude');
 legend('Original Signal','Delta Modulated Signal','Demodulated Signal');
+
+______________________________________________________
 
 
 PART 2: ADAPTIVE DELTA MODULATION
@@ -615,75 +787,7 @@ end
 figure(1);
 sfig1=plot(t,xsig,'k',t,S_DMout(1:Lsig),'b');
 set(sfig1,'LineWidth',2);
-        
-  _____________________________________________
-
-close all
-clear all
-clc
-td = 0.01;
-ts = 0.02;
-t = 0:td:5;
-x = 8*sin(2*pi*t);
-delta = 0.1;
-figure(1)
-plot(t,x);
-ADMout = adeltamod(x,delta,td,ts);
-figure(2)
-plot(t,ADMout);
-function [ADMout] = adeltamod(sig_in, Delta, td, ts)
- if (round(ts/td) >= 2)
- Nfac = round(ts/td); %Nearest integer
- xsig = downsample(sig_in,Nfac);
- Lxsig = length(xsig);
- Lsig_in = length(sig_in);
- 
- ADMout = zeros(Lsig_in); %Initialising output
- 
- cnt1 = 0; %Counters for no. of previous consecutively increasing
- cnt2 = 0; %steps
- sum = 0;
- for i=1:Lxsig
- 
- if (xsig(i) == sum)
- elseif (xsig(i) > sum)
- if (cnt1 < 2)
- sum = sum + Delta; %Step up by Delta, same as in DM
- elseif (cnt1 == 2)
- sum = sum + 2*Delta; %Double the step size after
- %first two increase
- elseif (cnt1 == 3)
- sum = sum + 4*Delta; %Double step size
- else
- sum = sum + 8*Delta; %Still double and then stop
- %doubling thereon
- end
- if (sum < xsig(i))
- cnt1 = cnt1 + 1;
- else
- cnt1 = 0;
- end
- else
- if (cnt2 < 2)
- sum = sum - Delta;
- elseif (cnt2 == 2)
- sum = sum - 2*Delta;
- elseif (cnt2 == 3)
- sum = sum - 4*Delta;
- else
- sum = sum - 8*Delta;
- end
- if (sum > xsig(i))
- cnt2 = cnt2 + 1;
- else
- cnt2 = 0;
- end
- end
- ADMout(((i-1)*Nfac + 1):(i*Nfac)) = sum;
- end
- end
-end
-
+________________________________________________  
 
 EXP 7: SIGMA DELTA MODULATION
 
@@ -753,7 +857,7 @@ for k=2:length(t)
 end
 end
 
-
+____________________________________________
 
 EXP 8: LINE CODES, PSD, PE
 
@@ -861,6 +965,8 @@ axis([0 N*Tb -6 6])
 title('Manchester code')
 grid on
 
+________________________________________
+
 PSD
 
 v = 1;   % Voltage level of a bit
@@ -898,6 +1004,9 @@ xlabel('Normalized frequency');
 ylabel('Power spectral density');
 title('Power Spectral Density for Different Line Codes');
 
+___________________________________________________________________
+
+
 Probability Of Error
 
 % The probability of error, for equally likely data, with AWGN and matched filter
@@ -921,6 +1030,9 @@ xlabel('SNR per bit, Eb/No (dB)');
 ylabel('Bit error probability Pe');
 title('Bit Error Probability for Different Digital Communication Schemes in AWGN');
 grid on;
+
+
+_______________________________________________________________
 
 
 EXP 9: FIR FILTER
@@ -968,6 +1080,8 @@ void main()
 comm_intr(); //init DSK, codec, McBSP
 while(1);
 }
+
+________________________________________________________
 
 
 EXP 10: IIR FILTER
