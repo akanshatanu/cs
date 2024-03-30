@@ -144,9 +144,6 @@ ___________________________________
 BANDPASS SAMPLING
 
 N = 1000; % number of samples
-for i = 1:2:N
- % Your loop body is currently empty. If you have code to include here, add it.
-end
 m = 0;
 sgma = 1;
 % Initialize arrays to store Gaussian random variables
